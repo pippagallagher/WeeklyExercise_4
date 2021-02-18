@@ -210,21 +210,46 @@ starbucks_with_2018_pop_est %>%
   
 ```{r}
 favorite_stp_by_pippa <- tibble(
-  place = c("Home", "Sol Food", "Sunset", 
-            "Stinson Beach", "Golden Gate Bridge Lookout", "Tam Valley Elementary",
-            "Burmatown", "Barnes & Noble", "Sabrina's", "Summit Trail"),
-  long = c(-122.530700, -122.535220, -122.638563, 
-           -122.658111, -122.497930, -122.527777, 
-           -122.530660, -122.517560, -122.532238,-122.569019),
-  lat = c(37.872520, 37.897800, 37.923904,
-          37.904385, 37.828207, 37.874140, 
-          37.926990, 37.928020, 37.894744,37.9),
-  fav = c("Yes","No","Yes","No","No","No","No","No","Yes")
+  place = c("Home", "Tam Valley Elementary","Sabrina's","Sol Food",  
+            "Barnes & Noble", "Summit Trail","Sunset", 
+            "Stinson Beach", "Golden Gate Bridge Lookout", 
+            "Burmatown"),
+  long = c(-122.530700, -122.527777, -122.532238, 
+           -122.535220, -122.517560, -122.568804, 
+           -122.638563, -122.658111, -122.497930, -122.530660 ),
+  lat = c(37.872520,  37.874140, 37.894744, 
+          37.897800, 37.928020, 37.921195, 37.923904,
+          37.904385, 37.828207, 37.926990),
+  fav = c("Yes","No","Yes","No","No","No","Yes","No","No","No")
   )
 ```
   
 
   * Create a `leaflet` map that uses circles to indicate your favorite places. Label them with the name of the place. Choose the base map you like best. Color your 3 favorite places differently than the ones that are not in your top 3 (HINT: `colorFactor()`). Add a legend that explains what the colors mean.  
+  
+```{r}
+pal <- colorFactor(c("#FA8072","#B22222"), favorite_stp_by_pippa$fav)
+
+
+leaflet(data = favorite_stp_by_pippa) %>% 
+  addProviderTiles(providers$Esri.WorldImagery) %>% 
+  addCircleMarkers(lng = ~long, 
+                  lat = ~lat,
+                  label = ~place,
+                  radius = 5,
+                  fillOpacity = 1,
+                  fillColor = ~pal(fav),
+                  stroke = FALSE) %>% 
+   addLegend("topleft",
+            pal = pal,
+            values = ~fav,
+            opacity = 1) %>% 
+  addPolylines(lng = ~long, 
+               lat = ~lat, 
+               color = col2hex("lightblue"))
+  
+```
+  
   
   * Connect all your locations together with a line in a meaningful way (you may need to order them differently in the original data).  
   
@@ -376,7 +401,7 @@ mpls_suspicious <-
   15. Use a `leaflet` map and the `MplsStops` dataset to display each of the stops on a map as a small point. Color the points differently depending on whether they were for suspicious vehicle/person or a traffic stop (the `problem` variable). HINTS: use `addCircleMarkers`, set `stroke = FAlSE`, use `colorFactor()` to create a palette. 
   
 ```{r}
-pal <- colorFactor("inferno", 
+pal <- colorFactor(c("#ADD8E6","#9370DB"), 
                      domain = MplsStops$problem) 
 
 leaflet(data = MplsStops) %>% 
