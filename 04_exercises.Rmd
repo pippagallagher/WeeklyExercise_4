@@ -232,7 +232,7 @@ pal <- colorFactor(c("#FA8072","#B22222"), favorite_stp_by_pippa$fav)
 
 
 leaflet(data = favorite_stp_by_pippa) %>% 
-  addProviderTiles(providers$Esri.WorldImagery) %>% 
+  addProviderTiles(providers$Esri.WorldGrayCanvas) %>% 
   addCircleMarkers(lng = ~long, 
                   lat = ~lat,
                   label = ~place,
@@ -380,6 +380,37 @@ covid_with_2018_pop_est %>%
   
   13. **CHALLENGE** Choose 4 dates spread over the time period of the data and create the same map as in exercise 12 for each of the dates. Display the four graphs together using faceting. What do you notice?
   
+```{r}
+states_map <- map_data("state")
+
+census_pop_est_2018 <- read_csv("https://www.dropbox.com/s/6txwv3b4ng7pepe/us_census_2018_state_pop_est.csv?dl=1") %>% 
+  separate(state, into = c("dot","state"), extra = "merge") %>% 
+  select(-dot) %>% 
+  mutate(state = str_to_lower(state))
+
+covid_with_2018_pop_est <-
+  covid19 %>% 
+  filter(date %in% c("2020-03-30","2020-08-30","2020-12-30","2021-02-15")) %>% 
+  mutate(state = str_to_lower(state)) %>% 
+  left_join(census_pop_est_2018,
+            by = c("state" = "state")) %>% 
+  group_by(state) %>% 
+  mutate(cases = max(cases),
+            covid_per_10000 = (cases/est_pop_2018)*10000)
+
+covid_with_2018_pop_est %>% 
+  ggplot() +
+  geom_map(map = states_map,
+           aes(map_id = state,
+               fill = covid_per_10000)) +
+  expand_limits(x = states_map$long, y = states_map$lat) +
+  theme_map() +
+  facet_wrap(vars(date)) + 
+  labs(title = "Cumulative Number of COVID-19 Cases in US per 10,000 People",
+       fill = "")
+```
+  
+  
 ## Minneapolis police stops
 
 These exercises use the datasets `MplsStops` and `MplsDemo` from the `carData` library. Search for them in Help to find out more information.
@@ -405,12 +436,16 @@ pal <- colorFactor(c("#ADD8E6","#9370DB"),
                      domain = MplsStops$problem) 
 
 leaflet(data = MplsStops) %>% 
-  addProviderTiles(providers$Esri.WorldImagery) %>% 
+  addProviderTiles(providers$Esri.WorldGrayCanvas) %>% 
   addCircleMarkers(lng = ~long, 
                   lat = ~lat,
                   fillColor = ~pal(problem),
                   radius = 2,
-                  stroke = FALSE)
+                  stroke = FALSE) %>% 
+     addLegend("topleft",
+            pal = pal,
+            values = ~problem,
+            opacity = 1)
 ```
   
   16. Save the folder from moodle called Minneapolis_Neighborhoods into your project/repository folder for this assignment. Make sure the folder is called Minneapolis_Neighborhoods. Use the code below to read in the data and make sure to **delete the `eval=FALSE`**. Although it looks like it only links to the .sph file, you need the entire folder of files to create the `mpls_nbhd` data set. These data contain information about the geometries of the Minneapolis neighborhoods. Using the `mpls_nbhd` dataset as the base file, join the `mpls_suspicious` and `MplsDemo` datasets to it by neighborhood (careful, they are named different things in the different files). Call this new dataset `mpls_all`.
@@ -434,12 +469,37 @@ mpls_all
 ```{r}
 leaflet(data = mpls_all) %>% 
   addProviderTiles(providers$Esri.WorldImagery) %>% 
+  addTiles() %>% 
   addPolygons()
   
 ```
 
   
   18. Use `leaflet` to create a map of your own choosing. Come up with a question you want to try to answer and use the map to help answer that question. Describe what your map shows. 
+  
+  Question: What is the distribution of stops that are male vs female? 
+  
+  This map shows clearly how much more frequently men are pulled over and stopped. The yellow outweighs the little purple that shows. 
+   
+```{r}
+pal <- colorFactor(c("#4B0082","#FFFF00","#800000"), 
+                     domain = MplsStops$gender) 
+
+leaflet(data = MplsStops) %>% 
+  addProviderTiles(providers$Esri.WorldGrayCanvas) %>% 
+  addCircleMarkers(lng = ~long, 
+                  lat = ~lat,
+                  fillColor = ~pal(gender),
+                  fillOpacity = 1,
+                  radius = 2,
+                  stroke = FALSE) %>% 
+     addLegend("topleft",
+            pal = pal,
+            values = ~gender,
+            opacity = 1)
+
+```
+  
   
   
 ## GitHub link
