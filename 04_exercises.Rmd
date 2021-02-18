@@ -1,6 +1,6 @@
 ---
 title: 'Weekly Exercises #4'
-author: "Put your name here"
+author: "Pippa Gallagher"
 output: 
   html_document:
     keep_md: TRUE
@@ -58,22 +58,6 @@ covid19 <- read_csv("https://raw.githubusercontent.com/nytimes/covid-19-data/mas
 
 ```
 
-## Put your homework on GitHub!
-
-If you were not able to get set up on GitHub last week, go [here](https://github.com/llendway/github_for_collaboration/blob/master/github_for_collaboration.md) and get set up first. Then, do the following (if you get stuck on a step, don't worry, I will help! You can always get started on the homework and we can figure out the GitHub piece later):
-
-* Create a repository on GitHub, giving it a nice name so you know it is for the 4th weekly exercise assignment (follow the instructions in the document/video).  
-* Copy the repo name so you can clone it to your computer. In R Studio, go to file --> New project --> Version control --> Git and follow the instructions from the document/video.  
-* Download the code from this document and save it in the repository folder/project on your computer.  
-* In R Studio, you should then see the .Rmd file in the upper right corner in the Git tab (along with the .Rproj file and probably .gitignore).  
-* Check all the boxes of the files in the Git tab under Stage and choose commit.  
-* In the commit window, write a commit message, something like "Initial upload" would be appropriate, and commit the files.  
-* Either click the green up arrow in the commit window or close the commit window and click the green up arrow in the Git tab to push your changes to GitHub.  
-* Refresh your GitHub page (online) and make sure the new documents have been pushed out.  
-* Back in R Studio, knit the .Rmd file. When you do that, you should have two (as long as you didn't make any changes to the .Rmd file, in which case you might have three) files show up in the Git tab - an .html file and an .md file. The .md file is something we haven't seen before and is here because I included `keep_md: TRUE` in the YAML heading. The .md file is a markdown (NOT R Markdown) file that is an interim step to creating the html file. They are displayed fairly nicely in GitHub, so we want to keep it and look at it there. Click the boxes next to these two files, commit changes (remember to include a commit message), and push them (green up arrow).  
-* As you work through your homework, save and commit often, push changes occasionally (maybe after you feel finished with an exercise?), and go check to see what the .md file looks like on GitHub.  
-* If you have issues, let me know! This is new to many of you and may not be intuitive at first. But, I promise, you'll get the hang of it! 
-
 
 ## Instructions
 
@@ -95,14 +79,77 @@ These exercises will reiterate what you learned in the "Mapping data with R" tut
 ### Starbucks locations (`ggmap`)
 
   1. Add the `Starbucks` locations to a world map. Add an aesthetic to the world map that sets the color of the points according to the ownership type. What, if anything, can you deduce from this visualization?  
+  
+  The types of ownerships are very concentrated by country. It appears that the US and Japan have the most Starbucks locations. 
+  
+  
+```{r}
+world <- get_stamenmap(
+    bbox = c(left = -180, bottom = -57, right = 179, top = 82.1), 
+    maptype = "terrain",
+    zoom = 2)
+ggmap(world) + 
+  geom_point(data = Starbucks, 
+             aes(x = Longitude, y = Latitude, color = `Ownership Type`),
+             alpha = .3, 
+             size = .1) +
+  theme_map() +
+  labs(title = "Starbucks Location Across the World")
+```
+  
 
   2. Construct a new map of Starbucks locations in the Twin Cities metro area (approximately the 5 county metro area).  
+  
+```{r}
+Twin_Cities <- get_stamenmap(
+  bbox = c(left = -93.3955, bottom = 44.8004, right = -92.8166, top = 45.0784), 
+    maptype = "watercolor",
+    zoom = 11)
+ggmap(Twin_Cities) + 
+  geom_point(data = Starbucks, 
+             aes(x = Longitude, y = Latitude),
+             size = .5) +
+  theme_map() +
+   labs(title = "Starbucks Location in the Twin Cities")
+```
+  
 
   3. In the Twin Cities plot, play with the zoom number. What does it do?  (just describe what it does - don't actually include more than one map).  
+  The higher the zoom number the more details are included in the map. When the zoom number is too low the map appears blury and uninformative. 
 
   4. Try a couple different map types (see `get_stamenmap()` in help and look at `maptype`). Include a map with one of the other map types.  
+  
+```{r}
+Twin_Cities <- get_stamenmap(
+  bbox = c(left = -93.3955, bottom = 44.8004, right = -92.8166, top = 45.0784), 
+    maptype = "watercolor",
+    zoom = 11)
+ggmap(Twin_Cities) + 
+  geom_point(data = Starbucks, 
+             aes(x = Longitude, y = Latitude),
+             size = .5) +
+  theme_map() +
+   labs(title = "Starbucks Location in the Twin Cities")
+```
 
   5. Add a point to the map that indicates Macalester College and label it appropriately. There are many ways you can do think, but I think it's easiest with the `annotate()` function (see `ggplot2` cheatsheet).
+  
+```{r}
+Twin_Cities <- get_stamenmap(
+  bbox = c(left = -93.3955, bottom = 44.8004, right = -92.8166, top = 45.0784), 
+    maptype = "watercolor",
+    zoom = 11)
+ggmap(Twin_Cities) + 
+  geom_point(data = Starbucks, 
+             aes(x = Longitude, y = Latitude),
+             size = 1) +
+  annotate("point", y = 44.9379, x = -93.1691, color = "orange", 
+           size = 10, label = "Macalester" ) + 
+  annotate("text", y = 44.9379, x = -93.1691, color = "navy", 
+           size = 1.7, label = "Macalester" ) + 
+  theme_map() +
+  labs(title = "Starbucks Location in the Twin Cities")
+```
 
 ### Choropleth maps with Starbucks data (`geom_map()`)
 
@@ -122,14 +169,49 @@ starbucks_with_2018_pop_est <-
 ```
 
   6. **`dplyr` review**: Look through the code above and describe what each line of code does.
+  
+151: Reads in data from url and creates data set called sensus_pop_est_2018
+152: breaks up the "." in front of each State name into its own column 
+153: selects every variable except the dot variable 
+154: replaces current state variable with the same names in lower cases 
+
+156/157: names a new data set from "starbucks_us_by_state"
+158/159: adds the census data set to the starbucks data set by the common variable state name
+160: creates a new variable that calculates the proportion of starbucks per 10000 people
+
 
   7. Create a choropleth map that shows the number of Starbucks per 10,000 people on a map of the US. Use a new fill color, add points for all Starbucks in the US (except Hawaii and Alaska), add an informative title for the plot, and include a caption that says who created the plot (you!). Make a conclusion about what you observe.
+  
+  
+```{r}
+states_map <- map_data("state")
+starbucks_with_2018_pop_est %>% 
+  ggplot() +
+  geom_map(map = states_map,
+           aes(map_id = state_name,
+               fill = starbucks_per_10000 )) +
+  expand_limits(x = states_map$long, y = states_map$lat) + 
+  geom_point(data = Starbucks
+                    %>% filter(Country == "US", !(`State/Province` %in% c("AK", "HI"))), 
+             aes(x = Longitude, y = Latitude),
+             color = "red",
+             size = .1) +
+  theme_map() +
+  labs(title = "Density and Dispersion of Starbucks in the US",
+       subtitle = "by: Pippa Gallagher")
+```
+  
 
 ### A few of your favorite things (`leaflet`)
 
   8. In this exercise, you are going to create a single map of some of your favorite places! The end result will be one map that satisfies the criteria below. 
 
   * Create a data set using the `tibble()` function that has 10-15 rows of your favorite places. The columns will be the name of the location, the latitude, the longitude, and a column that indicates if it is in your top 3 favorite locations or not. For an example of how to use `tibble()`, look at the `favorite_stp_by_lisa` I created in the data R code chunk at the beginning.  
+  
+```{r}
+tibble
+```
+  
 
   * Create a `leaflet` map that uses circles to indicate your favorite places. Label them with the name of the place. Choose the base map you like best. Color your 3 favorite places differently than the ones that are not in your top 3 (HINT: `colorFactor()`). Add a legend that explains what the colors mean.  
   
@@ -162,13 +244,33 @@ Stations<-read_csv("http://www.macalester.edu/~dshuman1/data/112/DC-Stations.csv
   9. Use the latitude and longitude variables in `Stations` to make a visualization of the total number of departures from each station in the `Trips` data. Use either color or size to show the variation in number of departures. This time, plot the points on top of a map. Use any of the mapping tools you'd like.
   
 ```{r}
-
+DC_map <- get_stamenmap(
+    bbox = c(left = -77.3039, bottom = 38.7332, right = -76.7251, top = 39.0539), 
+    maptype = "terrain",
+    zoom = 11)
+Trips %>% 
+  left_join(Stations, by = c( "sstation" = "name")) %>% 
+  group_by(lat,long) %>% 
+  mutate(departures = n()) %>% 
+ggmap(DC_map) +
+  geom_point(data = Trips,
+    aes(y=lat, x = long),
+    size = 0.5) +
+ theme_map()
 ```
   
   10. Only 14.4% of the trips in our data are carried out by casual users. Create a plot that shows which area(s) have stations with a much higher percentage of departures by casual users. What patterns do you notice? Also plot this on top of a map. I think it will be more clear what the patterns are.
   
 ```{r}
-
+Trips %>% 
+  left_join(Stations, by = c( "sstation" = "name")) %>% 
+  group_by(lat, long) %>% 
+  summarise(prop_departures = sum(client == "Casual")/n()) %>% 
+  ggplot() +
+  geom_point(aes(y = lat, x = long, color = prop_departures)) +
+  labs(title = "Map of the Stations' Casual vs Registered Proportions",
+       x = "",
+       y = "")
 ```
   
 ### COVID-19 data
@@ -176,6 +278,10 @@ Stations<-read_csv("http://www.macalester.edu/~dshuman1/data/112/DC-Stations.csv
 The following exercises will use the COVID-19 data from the NYT.
 
   11. Create a map that colors the states by the most recent cumulative number of COVID-19 cases (remember, these data report cumulative numbers so you don't need to compute that). Describe what you see. What is the problem with this map?
+```{r}
+
+```
+  
   
   12. Now add the population of each state to the dataset and color the states by most recent cumulative cases/10,000 people. See the code for doing this with the Starbucks data. You will need to make some modifications. 
   
@@ -187,12 +293,50 @@ These exercises use the datasets `MplsStops` and `MplsDemo` from the `carData` l
 
   14. Use the `MplsStops` dataset to find out how many stops there were for each neighborhood and the proportion of stops that were for a suspicious vehicle or person. Sort the results from most to least number of stops. Save this as a dataset called `mpls_suspicious` and display the table.  
   
-  15. Use a `leaflet` map and the `MplsStops` dataset to display each of the stops on a map as a small point. Color the points differently depending on whether they were for suspicious vehicle/person or a traffic stop (the `problem` variable). HINTS: use `addCircleMarkers`, set `stroke = FAlSE`, use `colorFactor()` to create a palette.  
+```{r}
+mpls_suspicious <-
+  MplsStops %>% 
+  group_by(neighborhood) %>% 
+  mutate(num_stops = n()) %>% 
+  group_by(neighborhood, problem) %>% 
+  mutate(num_sus = n(),
+         proportion = num_sus/num_stops) %>% 
+  arrange(num_stops)
+```
+  
+  
+  15. Use a `leaflet` map and the `MplsStops` dataset to display each of the stops on a map as a small point. Color the points differently depending on whether they were for suspicious vehicle/person or a traffic stop (the `problem` variable). HINTS: use `addCircleMarkers`, set `stroke = FAlSE`, use `colorFactor()` to create a palette. 
+  
+```{r}
+pal <- colorFactor("inferno", 
+                     domain = MplsStops$problem) 
+
+leaflet(data = MplsStops) %>% 
+  addProviderTiles(providers$Esri.WorldImagery) %>% 
+  addCircleMarkers(lng = ~long, 
+                  lat = ~lat,
+                  fillColor = ~pal(problem),
+                  radius = 2,
+                  stroke = FALSE)
+```
   
   16. Save the folder from moodle called Minneapolis_Neighborhoods into your project/repository folder for this assignment. Make sure the folder is called Minneapolis_Neighborhoods. Use the code below to read in the data and make sure to **delete the `eval=FALSE`**. Although it looks like it only links to the .sph file, you need the entire folder of files to create the `mpls_nbhd` data set. These data contain information about the geometries of the Minneapolis neighborhoods. Using the `mpls_nbhd` dataset as the base file, join the `mpls_suspicious` and `MplsDemo` datasets to it by neighborhood (careful, they are named different things in the different files). Call this new dataset `mpls_all`.
 
 ```{r, eval=FALSE}
 mpls_nbhd <- st_read("Minneapolis_Neighborhoods/Minneapolis_Neighborhoods.shp", quiet = TRUE)
+```
+
+```{r}
+MplsDemo
+```
+
+
+```{r}
+#mpls_all <-
+  mpls_nbhd %>% 
+  left_join(MplsDemo, by = c("neighborhood" = "neighborhood")) %>% 
+  left_join(mpls_suspicious, by = c("BDNAME" = "neighborhood")) 
+  
 ```
 
   17. Use `leaflet` to create a map from the `mpls_all` data  that colors the neighborhoods by `prop_suspicious`. Display the neighborhood name as you scroll over it. Describe what you observe in the map.
