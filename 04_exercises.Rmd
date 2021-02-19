@@ -12,7 +12,7 @@ output:
 
 
 ```{r setup, include=FALSE}
-#knitr::opts_chunk$set(echo = TRUE, error=TRUE, message=FALSE, warning=FALSE)
+knitr::opts_chunk$set(echo = TRUE, error=TRUE, message=FALSE, warning=FALSE)
 ```
 
 ```{r libraries}
@@ -103,7 +103,7 @@ ggmap(world) +
 ```{r}
 Twin_Cities <- get_stamenmap(
   bbox = c(left = -93.3955, bottom = 44.8004, right = -92.8166, top = 45.0784), 
-    maptype = "watercolor",
+    maptype = "terrain",
     zoom = 11)
 ggmap(Twin_Cities) + 
   geom_point(data = Starbucks, 
@@ -170,17 +170,18 @@ starbucks_with_2018_pop_est <-
 
   6. **`dplyr` review**: Look through the code above and describe what each line of code does.
   
-151: Reads in data from url and creates data set called sensus_pop_est_2018
-152: breaks up the "." in front of each State name into its own column 
-153: selects every variable except the dot variable 
-154: replaces current state variable with the same names in lower cases 
-
-156/157: names a new data set from "starbucks_us_by_state"
-158/159: adds the census data set to the starbucks data set by the common variable state name
-160: creates a new variable that calculates the proportion of starbucks per 10000 people
+1. Reads in data from url and creates data set called sensus_pop_est_2018
+2. breaks up the "." in front of each State name into its own column 
+3. selects every variable except the dot variable 
+4. replaces current state variable with the same names in lower cases 
+5. names a new data set from "starbucks_us_by_state"
+6. adds the census data set to the starbucks data set by the common variable state name
+7. creates a new variable that calculates the proportion of starbucks per 10000 people
 
 
   7. Create a choropleth map that shows the number of Starbucks per 10,000 people on a map of the US. Use a new fill color, add points for all Starbucks in the US (except Hawaii and Alaska), add an informative title for the plot, and include a caption that says who created the plot (you!). Make a conclusion about what you observe.
+  
+  From this map it appears that the west coast has the most Starbucks and that Starbucks are centered around large cities.
   
   
 ```{r}
@@ -189,7 +190,8 @@ starbucks_with_2018_pop_est %>%
   ggplot() +
   geom_map(map = states_map,
            aes(map_id = state_name,
-               fill = starbucks_per_10000 )) +
+               fill = starbucks_per_10000),
+              fillColor = "green") +
   expand_limits(x = states_map$long, y = states_map$lat) + 
   geom_point(data = Starbucks
                     %>% filter(Country == "US", !(`State/Province` %in% c("AK", "HI"))), 
@@ -233,6 +235,9 @@ pal <- colorFactor(c("#FA8072","#B22222"), favorite_stp_by_pippa$fav)
 
 leaflet(data = favorite_stp_by_pippa) %>% 
   addProviderTiles(providers$Esri.WorldGrayCanvas) %>% 
+   addPolylines(lng = ~long, 
+               lat = ~lat, 
+               color = col2hex("lightblue")) %>% 
   addCircleMarkers(lng = ~long, 
                   lat = ~lat,
                   label = ~place,
@@ -243,10 +248,8 @@ leaflet(data = favorite_stp_by_pippa) %>%
    addLegend("topleft",
             pal = pal,
             values = ~fav,
-            opacity = 1) %>% 
-  addPolylines(lng = ~long, 
-               lat = ~lat, 
-               color = col2hex("lightblue"))
+            opacity = 1) 
+ 
   
 ```
   
@@ -281,7 +284,7 @@ Stations<-read_csv("http://www.macalester.edu/~dshuman1/data/112/DC-Stations.csv
   
 ```{r}
 DC_map <- get_stamenmap(
-    bbox = c(left = -77.3039, bottom = 38.7332, right = -76.7251, top = 39.0539), 
+    bbox = c(left = -77.25, bottom = 38.79, right = -76.9, top = 39), 
     maptype = "terrain",
     zoom = 11)
 
@@ -293,8 +296,11 @@ trips_map <- Trips %>%
 ggmap(DC_map) +
   geom_point(data = trips_map,
     aes(y=lat, x = long, color = departures),
-    size = 0.5) +
- theme_map()
+    size = 0.8) +
+ theme_map()+
+  labs(title = "Map of Bike Stations in DC",
+       x = "",
+       y = "")
 ```
   
   10. Only 14.4% of the trips in our data are carried out by casual users. Create a plot that shows which area(s) have stations with a much higher percentage of departures by casual users. What patterns do you notice? Also plot this on top of a map. I think it will be more clear what the patterns are.
@@ -308,14 +314,14 @@ trips_map <- Trips %>%
   summarise(prop_departures = sum(client == "Casual")/n()) 
 
 DC_map <- get_stamenmap(
-    bbox = c(left = -77.3039, bottom = 38.7332, right = -76.7251, top = 39.0539), 
+    bbox = c(left = -77.25, bottom = 38.79, right = -76.9, top = 39), 
     maptype = "terrain",
     zoom = 11)
 
   ggmap(DC_map) +
   geom_point(data = trips_map,
     aes(y = lat, x = long, color = prop_departures),
-    size = 0.5) +
+    size = 0.8) +
   labs(title = "Map of the Stations' Casual vs Registered Proportions",
        x = "",
        y = "")
@@ -329,7 +335,7 @@ The following exercises will use the COVID-19 data from the NYT.
 
   11. Create a map that colors the states by the most recent cumulative number of COVID-19 cases (remember, these data report cumulative numbers so you don't need to compute that). Describe what you see. What is the problem with this map?
   
-  This map does not account for the differences in populations between states. California is shown as having the most COVID019 cases, which is accurate, but misleading because it is also the most populated state.
+  This map does not account for the differences in populations between states. California is shown as having the most COVID-19 cases, which is accurate, but misleading because it is also the most populated state.
   
 ```{r}
 states_map <- map_data("state")
@@ -426,6 +432,8 @@ mpls_suspicious <-
   mutate(num_sus = n(),
          proportion = num_sus/num_stops) %>% 
   arrange(num_stops)
+
+mpls_suspicious
 ```
   
   
@@ -507,4 +515,3 @@ leaflet(data = MplsStops) %>%
   19. Below, provide a link to your GitHub page with this set of Weekly Exercises. Specifically, if the name of the file is 04_exercises.Rmd, provide a link to the 04_exercises.md file, which is the one that will be most readable on GitHub.
 
 
-**DID YOU REMEMBER TO UNCOMMENT THE OPTIONS AT THE TOP?**
